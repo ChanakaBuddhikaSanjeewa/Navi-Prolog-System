@@ -11,7 +11,6 @@
 % Railway healthcheck එක සඳහා වෙනම /health path එකක්
 :- http_handler(root(health), handle_healthcheck, []).
 :- http_handler(root(.), frontend_files, [prefix]).
-:- http_handler(root(assests), http_reply_from_files('assests', []), [prefix]).
 
 % Railway healthcheck එකට පමණක් JSON response එක යැවීම
 handle_healthcheck(_Request) :-
@@ -49,6 +48,6 @@ frontend_files(Request) :-
 frontend_files(Request) :-
     memberchk(path('/'), Request),
     !,
-    http_reply_file('route_finder_ui.html', [], Request).
+    http_reply_file('index.html', [], Request).
 frontend_files(Request) :-
-    http_reply_from_files('frontend', [], Request).
+    http_reply_from_files('.', [], Request).
