@@ -4,15 +4,13 @@
 :- use_module(library(http/json)).
 :- use_module(library(www_browser)).
 
-:- consult('smart_route_api.pl').
+:- consult('NaviProlog-System.pl').
 
 :- dynamic server_started/0.
 
-% Railway healthcheck එක සඳහා වෙනම /health path එකක්
 :- http_handler(root(health), handle_healthcheck, []).
 :- http_handler(root(.), frontend_files, [prefix]).
 
-% Railway healthcheck එකට පමණක් JSON response එක යැවීම
 handle_healthcheck(_Request) :-
     format('Content-type: application/json~n~n'),
     json_write(current_output, json([status=ok, message="Prolog Smart Route Server is running!"])).
