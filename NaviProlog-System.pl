@@ -12,6 +12,12 @@
 :- use_module(library(http/http_parameters)).
 :- use_module(library(uri)).
 :- use_module(library(readutil)).
+% Required for http_get/3 to be able to open https:// URLs at all
+% (Nominatim and OSRM are both https). Without these, every outbound
+% request below throws immediately, gets swallowed by catch/3, and
+% every search/route silently "fails" no matter what was typed.
+:- use_module(library(ssl)).
+:- use_module(library(http/http_ssl_plugin)).
 
 % Register API handlers
 :- http_handler(root(api/route), route_api_handler, []).
@@ -60,8 +66,10 @@ fetch_osrm_direct_route(Dict, Response) :-
         (   http_get(Url, JSON, [cert_verify_server(false)]),
             parse_osrm_response(JSON, Dict, Response)
         ),
-        _,
-        fallback_graph_route(Dict, Response)
+        Error,
+        (   print_message(error, Error),
+            fallback_graph_route(Dict, Response)
+        )
     ).
 
 fetch_osrm_waypoint_route(Dict, ViaCoord, Response) :-
@@ -113,8 +121,10 @@ search_api_handler(Request) :-
             (   http_get(Url, JSON, [request_header('User-Agent'('SmartRouteFinder/1.0'))]),
                 reply_json(JSON)
             ),
-            _,
-            reply_json([])
+            Error,
+            (   print_message(error, Error),
+                reply_json([])
+            )
         )
     ).
 
