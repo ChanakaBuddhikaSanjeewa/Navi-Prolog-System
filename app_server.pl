@@ -3,7 +3,7 @@
 :- use_module(library(http/http_files)).
 :- use_module(library(www_browser)).
 
-:- consult('backend/smart_route_api.pl').
+:- consult('smart_route_api.pl').
 
 :- dynamic server_started/0.
 
