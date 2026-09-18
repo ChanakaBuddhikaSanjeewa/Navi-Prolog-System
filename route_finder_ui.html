@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="si" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Route Finder for Daily Commuters</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="h-full bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
+
+    <!-- Top Navigation Bar -->
+    <header
+        class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <!-- App Logo Integration -->
+            <div
+                class="w-10 h-10 rounded-xl overflow-hidden border border-cyan-500/40 shadow-md shadow-cyan-500/20 shrink-0">
+                <img src="/assests/photo_2026-09-17_14-18-54.jpg" alt="Smart Route Finder Logo"
+                    class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                    Smart Route Finder</h1>
+                <p class="text-xs text-slate-400">Daily Commuter Navigation & Route Optimization</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span id="connection-status"
+                class="flex items-center text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span> Online Mode
+            </span>
+            <button onclick="openRoadStatusModal()"
+                class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-road-barrier text-amber-400"></i> Manage Road Status
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- Sidebar Controls -->
+        <aside
+            class="w-full md:w-96 bg-slate-900/90 backdrop-blur-md border-r border-slate-800 flex flex-col p-5 shrink-0 z-10 overflow-y-auto shadow-2xl">
+
+            <!-- Journey Inputs Section -->
+            <div class="space-y-4">
+                <h2 class="text-sm font-semibold tracking-wide uppercase text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-route"></i> Journey Planner
+                </h2>
+
+                <!-- Start Location -->
+                <div class="relative">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Start Location</label>
+                    <div class="relative flex items-center">
+                        <i class="fa-solid fa-location-dot absolute left-3 text-cyan-400"></i>
+                        <input type="text" id="start-input" placeholder="Search start location..." autocomplete="off"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 transition">
+                        <button onclick="useCurrentLocation()" title="Use Current GPS Location"
+                            class="absolute right-2.5 text-slate-400 hover:text-cyan-400 p-1 cursor-pointer">
+                            <i class="fa-solid fa-crosshairs text-base"></i>
+                        </button>
+                    </div>
+                    <div id="start-suggestions"
+                        class="absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                    </div>
+                </div>
+
+                <!-- Destination -->
+                <div class="relative">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Destination</label>
+                    <div class="relative flex items-center">
+                        <i class="fa-solid fa-flag-checkered absolute left-3 text-rose-400"></i>
+                        <input type="text" id="dest-input" placeholder="Search destination..." autocomplete="off"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-rose-500 transition">
+                    </div>
+                    <div id="dest-suggestions"
+                        class="absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                    </div>
+                </div>
+
+                <!-- Preferences & Travel Mode -->
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Preference</label>
+                        <select id="preference-select"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                            <option value="fastest">Fastest Route</option>
+                            <option value="shortest">Shortest Route</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Travel Mode</label>
+                        <select id="travel-mode-select"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                            <option value="vehicle">Vehicle (Car/Bike)</option>
+                            <option value="foot">On Foot (Walking)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Find Route Button -->
+                <button onclick="calculateRoute()"
+                    class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-semibold py-3 rounded-xl shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2 cursor-pointer mt-2">
+                    <i class="fa-solid fa-compass"></i> Find Best Route
+                </button>
+            </div>
+
+            <!-- Journey Metrics Card -->
+            <div id="metrics-card" class="mt-6 bg-slate-950/60 border border-slate-800 rounded-2xl p-4 hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-cyan-400">Route Summary</span>
+                    <span id="badge-recommended"
+                        class="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-medium">RECOMMENDED</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-400">Distance</div>
+                        <div id="metric-dist" class="text-sm font-bold text-slate-100 mt-0.5">0 km</div>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-400">Duration</div>
+                        <div id="metric-time" class="text-sm font-bold text-slate-100 mt-0.5">0 min</div>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-400">Stops</div>
+                        <div id="metric-stops" class="text-sm font-bold text-slate-100 mt-0.5">0</div>
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="mt-4 flex gap-2">
+                    <button id="nav-btn" onclick="toggleNavigation()"
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20">
+                        <i class="fa-solid fa-navigation"></i> View Journey
+                    </button>
+                    <button onclick="resetJourney()"
+                        class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs transition cursor-pointer"
+                        title="Reset">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alternative Corridors Section -->
+            <div class="mt-6 flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <code class="text-cyan-400">Alternative Corridors</code>
+                    </h3>
+                </div>
+                <div id="alternatives-list" class="space-y-2 overflow-y-auto max-h-48 pr-1">
+                    <div
+                        class="text-xs text-slate-500 italic p-2 bg-slate-950/40 rounded-xl border border-slate-900 text-center">
+                        Calculate a route to view alternative options.
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main class="flex-1 relative h-full">
+            <div id="map" class="w-full h-full z-0"></div>
+        </main>
+    </div>
+
+    <!-- Road Status Modal -->
+    <div id="road-modal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-road-barrier text-amber-400"></i> Manage Road Network Status
+                </h3>
+                <button onclick="closeRoadStatusModal()" class="text-slate-400 hover:text-slate-100 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="py-4 space-y-3">
+                <p class="text-xs text-slate-400">Inspect available road corridors or report/simulate blocked road
+                    segments:</p>
+                <div id="modal-roads-list" class="space-y-2 max-h-60 overflow-y-auto">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            <div class="flex justify-end pt-3 border-t border-slate-800">
+                <button onclick="closeRoadStatusModal()"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        let map;
+        let startMarker = null;
+        let destMarker = null;
+        let routePolyline = null;
+        let navWatchId = null;
+        let isNavigating = false;
+
+        let startCoord = null;
+        let destCoord = null;
+
+        // Initialize Leaflet Map centered around Sri Lanka
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([6.9271, 79.8612], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            setupAutocomplete('start-input', 'start-suggestions', (item) => {
+                startCoord = { lat: parseFloat(item.lat), lon: parseFloat(item.lon), name: item.display_name };
+                document.getElementById('start-input').value = item.display_name;
+                updateMapMarker('start', startCoord.lat, startCoord.lon, item.display_name);
+            });
+            setupAutocomplete('dest-input', 'dest-suggestions', (item) => {
+                destCoord = { lat: parseFloat(item.lat), lon: parseFloat(item.lon), name: item.display_name };
+                document.getElementById('dest-input').value = item.display_name;
+                updateMapMarker('dest', destCoord.lat, destCoord.lon, item.display_name);
+            });
+        });
+
+        // Autocomplete Helper via Nominatim API
+        function setupAutocomplete(inputId, suggestionId, onSelect) {
+            const input = document.getElementById(inputId);
+            const box = document.getElementById(suggestionId);
+            let timeout = null;
+
+            input.addEventListener('input', () => {
+                clearTimeout(timeout);
+                const q = input.value.trim();
+                if (q.length < 3) {
+                    box.classList.add('hidden');
+                    return;
+                }
+                timeout = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+                        const data = await res.json();
+                        box.innerHTML = '';
+                        if (data && data.length > 0) {
+                            data.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 cursor-pointer border-b border-slate-800/50 last:border-0 truncate';
+                                div.textContent = item.display_name;
+                                div.onclick = () => {
+                                    onSelect(item);
+                                    box.classList.add('hidden');
+                                };
+                                box.appendChild(div);
+                            });
+                            box.classList.remove('hidden');
+                        } else {
+                            box.classList.add('hidden');
+                        }
+                    } catch (e) {
+                        box.classList.add('hidden');
+                    }
+                }, 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !box.contains(e.target)) {
+                    box.classList.add('hidden');
+                }
+            });
+        }
+
+        function updateMapMarker(type, lat, lon, label) {
+            const latLng = [lat, lon];
+            if (type === 'start') {
+                if (startMarker) map.removeLayer(startMarker);
+                startMarker = L.marker(latLng).addTo(map).bindPopup(`<b>Start:</b> ${label}`);
+            } else {
+                if (destMarker) map.removeLayer(destMarker);
+                destMarker = L.marker(latLng).addTo(map).bindPopup(`<b>Destination:</b> ${label}`);
+            }
+            if (startMarker && destMarker) {
+                map.fitBounds(L.featureGroup([startMarker, destMarker]).getBounds(), { padding: [50, 50] });
+            } else {
+                map.setView(latLng, 14);
+            }
+        }
+
+        // Current GPS Location Finder
+        function useCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                startCoord = { lat, lon, name: 'Current Location' };
+                try {
+                    const res = await fetch(`/api/reverse?lat=${lat}&lon=${lon}`);
+                    const data = await res.json();
+                    const name = data.display_name || 'Current Location';
+                    document.getElementById('start-input').value = name;
+                    startCoord.name = name;
+                    updateMapMarker('start', lat, lon, name);
+                } catch (e) {
+                    document.getElementById('start-input').value = 'Current Location';
+                    updateMapMarker('start', lat, lon, 'Current Location');
+                }
+            }, () => {
+                alert('Unable to retrieve your location');
+            });
+        }
+
+        // Calculate Route Handler
+        async function calculateRoute() {
+            if (!startCoord || !destCoord) {
+                alert('Please select both start location and destination.');
+                return;
+            }
+            const preference = document.getElementById('preference-select').value;
+            const travelMode = document.getElementById('travel-mode-select').value;
+
+            try {
+                const res = await fetch('/api/route', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        start_coord: startCoord,
+                        destination_coord: destCoord,
+                        destination: destCoord.name,
+                        preference: preference,
+                        travel_mode: travelMode
+                    })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    displayRouteResults(data);
+                    loadAlternativeCorridors();
+                } else {
+                    alert('Could not calculate route.');
+                }
+            } catch (e) {
+                alert('Server connection error during routing.');
+            }
+        }
+
+        function displayRouteResults(data) {
+            document.getElementById('metrics-card').classList.remove('hidden');
+            document.getElementById('metric-dist').textContent = `${data.distance} km`;
+            document.getElementById('metric-time').textContent = `${data.minutes} min`;
+            document.getElementById('metric-stops').textContent = data.stops;
+
+            if (routePolyline) map.removeLayer(routePolyline);
+
+            if (data.geometry && data.geometry.length > 0) {
+                const latLngs = data.geometry.map(pt => [pt.lat, pt.lon]);
+                routePolyline = L.polyline(latLngs, { color: '#06b6d4', weight: 5, opacity: 0.8 }).addTo(map);
+                map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
+            }
+        }
+
+        async function loadAlternativeCorridors() {
+            const listContainer = document.getElementById('alternatives-list');
+            try {
+                const res = await fetch('/api/roads');
+                const roads = await res.json();
+                listContainer.innerHTML = '';
+                roads.forEach((road, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between text-xs';
+                    div.innerHTML = `
+                        <div>
+                            <div class="font-medium text-slate-200">${road.name}</div>
+                            <div class="text-[10px] text-slate-400">${road.distance} km • ~${road.duration} mins</div>
+                        </div>
+                        <button onclick="useAlternativeRoute(${road.distance}, ${road.duration})" class="bg-slate-800 hover:bg-cyan-600 text-slate-200 hover:text-white px-2.5 py-1 rounded-lg text-[10px] font-medium transition cursor-pointer">
+                            Use alternative
+                        </button>
+                    `;
+                    listContainer.appendChild(div);
+                });
+            } catch (e) {
+                listContainer.innerHTML = '<div class="text-xs text-rose-400 p-2">Failed to load alternatives</div>';
+            }
+        }
+
+        function useAlternativeRoute(dist, duration) {
+            document.getElementById('metric-dist').textContent = `${dist} km`;
+            document.getElementById('metric-time').textContent = `${duration} min`;
+            document.getElementById('badge-recommended').textContent = 'OPENED';
+            alert('Alternative route selected and applied.');
+        }
+
+        // Live Navigation Simulator
+        function toggleNavigation() {
+            const btn = document.getElementById('nav-btn');
+            if (!isNavigating) {
+                isNavigating = true;
+                btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Navigation';
+                btn.className = 'flex-1 bg-rose-600 hover:bg-rose-500 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20';
+
+                if (navigator.geolocation) {
+                    navWatchId = navigator.geolocation.watchPosition((pos) => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        map.setView([lat, lon], 16);
+                    }, null, { enableHighAccuracy: true });
+                }
+            } else {
+                stopNavigation();
+            }
+        }
+
+        function stopNavigation() {
+            isNavigating = false;
+            const btn = document.getElementById('nav-btn');
+            btn.innerHTML = '<i class="fa-solid fa-navigation"></i> View Journey';
+            btn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20';
+            if (navWatchId !== null) {
+                navigator.geolocation.clearWatch(navWatchId);
+                navWatchId = null;
+            }
+        }
+
+        function resetJourney() {
+            stopNavigation();
+            document.getElementById('metrics-card').classList.add('hidden');
+            document.getElementById('start-input').value = '';
+            document.getElementById('dest-input').value = '';
+            startCoord = null;
+            destCoord = null;
+            if (startMarker) map.removeLayer(startMarker);
+            if (destMarker) map.removeLayer(destMarker);
+            if (routePolyline) map.removeLayer(routePolyline);
+            startMarker = null;
+            destMarker = null;
+            routePolyline = null;
+            map.setView([6.9271, 79.8612], 13);
+            document.getElementById('alternatives-list').innerHTML = '<div class="text-xs text-slate-500 italic p-2 bg-slate-950/40 rounded-xl border border-slate-900 text-center">Calculate a route to view alternative options.</div>';
+        }
+
+        // Road Status Modal functions
+        async function openRoadStatusModal() {
+            document.getElementById('road-modal').classList.remove('hidden');
+            const list = document.getElementById('modal-roads-list');
+            list.innerHTML = '<div class="text-xs text-slate-400 p-2">Loading road network...</div>';
+            try {
+                const res = await fetch('/api/roads');
+                const roads = await res.json();
+                list.innerHTML = '';
+                roads.forEach(road => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-xs';
+                    div.innerHTML = `
+                        <div>
+                            <div class="font-medium text-slate-200">${road.name}</div>
+                            <div class="text-[10px] text-slate-400">${road.distance} km • Status: <span class="text-emerald-400">${road.status}</span></div>
+                        </div>
+                        <button onclick="blockRoad('${road.name}')" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2.5 py-1 rounded-lg text-[10px] font-medium transition cursor-pointer">
+                            Block Road
+                        </button>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch (e) {
+                list.innerHTML = '<div class="text-xs text-rose-400 p-2">Failed to fetch roads</div>';
+            }
+        }
+
+        function closeRoadStatusModal() {
+            document.getElementById('road-modal').classList.add('hidden');
+        }
+
+        async function blockRoad(roadName) {
+            try {
+                await fetch('/api/blocked', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ road: roadName })
+                });
+                alert(`Road "${roadName}" reported as blocked and persisted successfully.`);
+                openRoadStatusModal();
+            } catch (e) {
+                alert('Failed to report road status.');
+            }
+        }
+    </script>
+</body>
+
+</html>

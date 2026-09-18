@@ -49,6 +49,6 @@ frontend_files(Request) :-
 frontend_files(Request) :-
     memberchk(path('/'), Request),
     !,
-    http_reply_file('frontend/route_finder_ui.html', [], Request).
+    http_reply_file('route_finder_ui.html', [], Request).
 frontend_files(Request) :-
     http_reply_from_files('frontend', [], Request).
