@@ -1,4 +1,4 @@
-:- module(NaviProlog-System, [
+:- module('NaviProlog-System', [
     route_api_handler/1,
     search_api_handler/1,
     reverse_api_handler/1,
@@ -46,7 +46,6 @@ route_api_handler(_Request) :-
     reply_json(json{ok: false, error: "Method not allowed"}).
 
 handle_route_request(Dict, Response) :-
-    % Check if via_coord is provided for alternative route
     (   get_dict(via_coord, Dict, ViaCoord)
     ->  fetch_osrm_waypoint_route(Dict, ViaCoord, Response)
     ;   fetch_osrm_direct_route(Dict, Response)
@@ -87,7 +86,6 @@ parse_osrm_response(JSON, Dict, Response) :-
     get_dict(coordinates, Geometry, Coords),
     DistKm is round((DistMeters / 1000.0) * 10) / 10.0,
     Minutes is ceiling(DurSeconds / 60.0),
-    % Format geometry for frontend [{lat:..., lon:...}, ...]
     maplist(coord_to_dict, Coords, FormattedCoords),
     get_dict(destination, Dict, DestName),
     Response = json{
