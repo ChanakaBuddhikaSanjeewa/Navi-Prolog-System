@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="si" class="h-full dark" id="html-root">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaviProlog System for Daily Commuters</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body
+    class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden transition-colors duration-300">
+
+    <!-- Top Navigation Bar -->
+    <header
+        class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shrink-0 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div
+                class="w-10 h-10 rounded-xl overflow-hidden border border-cyan-500/40 shadow-md shadow-cyan-500/20 shrink-0 bg-slate-950 flex items-center justify-center">
+                <img src="icon.jpg" alt="Smart Route Finder Logo" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                    NaviProlog System</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Daily Commuter Navigation & Route Optimization</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <!-- Theme Toggle Button -->
+            <button onclick="toggleTheme()"
+                class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-lg border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                title="Toggle Theme">
+                <i id="theme-icon" class="fa-solid fa-moon text-cyan-400"></i>
+            </button>
+            <span
+                class="flex items-center text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span> Online Mode
+            </span>
+            <button onclick="openRoadStatusModal()"
+                class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-road-barrier text-amber-400"></i> Manage Road Status
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- Sidebar Controls -->
+        <aside
+            class="w-full md:w-96 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex flex-col p-5 shrink-0 z-10 overflow-y-auto shadow-2xl">
+
+            <div class="space-y-4">
+                <h2
+                    class="text-sm font-semibold tracking-wide uppercase text-cyan-600 dark:text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-route"></i> Journey Planner
+                </h2>
+
+                <!-- Start Location -->
+                <div class="relative">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Start
+                        Location</label>
+                    <div class="relative flex items-center">
+                        <i class="fa-solid fa-location-dot absolute left-3 text-cyan-500"></i>
+                        <input type="text" id="start-input" placeholder="Search start location..." autocomplete="off"
+                            class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500 transition">
+                        <button onclick="useCurrentLocation()" title="Use Current GPS Location"
+                            class="absolute right-2.5 text-slate-400 hover:text-cyan-400 p-1 cursor-pointer">
+                            <i class="fa-solid fa-crosshairs text-base"></i>
+                        </button>
+                    </div>
+                    <div id="start-suggestions"
+                        class="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                    </div>
+                </div>
+
+                <!-- Destination -->
+                <div class="relative">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Destination</label>
+                    <div class="relative flex items-center">
+                        <i class="fa-solid fa-flag-checkered absolute left-3 text-rose-500"></i>
+                        <input type="text" id="dest-input" placeholder="Search destination..." autocomplete="off"
+                            class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-rose-500 transition">
+                    </div>
+                    <div id="dest-suggestions"
+                        class="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                    </div>
+                </div>
+
+                <!-- Live Weather Card -->
+                <div id="weather-card"
+                    class="bg-slate-100 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-xl p-3 flex items-center justify-between hidden">
+                    <div class="flex items-center gap-3">
+                        <div id="weather-icon-container"
+                            class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg">
+                            <i class="fa-solid fa-cloud-sun"></i>
+                        </div>
+                        <div>
+                            <div
+                                class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
+                                Live Weather (Start)</div>
+                            <div id="weather-condition" class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                Checking...</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div id="weather-temp" class="text-base font-bold text-cyan-600 dark:text-cyan-400">--°C</div>
+                    </div>
+                </div>
+
+                <!-- Preferences & Travel Modes -->
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label
+                            class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Preference</label>
+                        <select id="preference-select"
+                            class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500">
+                            <option value="fastest">Fastest Route</option>
+                            <option value="shortest">Shortest Route</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Travel
+                            Mode</label>
+                        <select id="travel-mode-select"
+                            class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500">
+                            <option value="car">Car (Drive)</option>
+                            <option value="bike">Bike (Two-Wheeler)</option>
+                            <option value="train">Train (Public Transport)</option>
+                            <option value="walk">Walk</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Find Route Button -->
+                <button onclick="calculateRoute()"
+                    class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-semibold py-3 rounded-xl shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2 cursor-pointer mt-2">
+                    <i class="fa-solid fa-compass"></i> Find Best Route
+                </button>
+            </div>
+
+            <!-- Saved Places / Favorites Section -->
+            <div class="mt-4">
+                <h3
+                    class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bookmark text-cyan-500"></i> Saved Places (Favorites)
+                </h3>
+                <div id="saved-places-list" class="space-y-1">
+                    <!-- Dynamically rendered frequent places -->
+                </div>
+            </div>
+
+            <!-- Journey Metrics Card -->
+            <div id="metrics-card"
+                class="mt-6 bg-slate-100 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-2xl p-4 hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Route
+                        Summary</span>
+                    <span id="badge-recommended"
+                        class="text-[10px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-medium">RECOMMENDED</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div
+                        class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Distance</div>
+                        <div id="metric-dist" class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">0 km
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Duration</div>
+                        <div id="metric-time" class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">0 min
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Stops</div>
+                        <div id="metric-stops" class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">0
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex gap-2">
+                    <button id="nav-btn" onclick="toggleNavigation()"
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20">
+                        <i class="fa-solid fa-navigation"></i> View Journey
+                    </button>
+                    <button onclick="resetJourney()"
+                        class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-xl text-xs transition cursor-pointer"
+                        title="Reset">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alternative Corridors Section -->
+            <div class="mt-6 flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <h3
+                        class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <code class="text-cyan-600 dark:text-cyan-400">Alternative Corridors</code>
+                    </h3>
+                </div>
+                <div id="alternatives-list" class="space-y-2 overflow-y-auto max-h-48 pr-1">
+                    <div
+                        class="text-xs text-slate-500 italic p-2 bg-slate-100 dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-slate-900 text-center">
+                        Calculate a route to view alternative options.
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main class="flex-1 relative h-full">
+            <div id="map" class="w-full h-full z-0"></div>
+        </main>
+    </div>
+
+    <!-- Road Status Modal -->
+    <div id="road-modal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-road-barrier text-amber-400"></i> Manage Road Network Status
+                </h3>
+                <button onclick="closeRoadStatusModal()"
+                    class="text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="py-4 space-y-3">
+                <p class="text-xs text-slate-600 dark:text-slate-400">Inspect available road corridors or
+                    report/simulate blocked road segments with status color options:</p>
+                <div id="modal-roads-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+            </div>
+            <div class="flex justify-end pt-3 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="closeRoadStatusModal()"
+                    class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Custom Script -->
+    <script src="script.js"></script>
+</body>
+
+</html>

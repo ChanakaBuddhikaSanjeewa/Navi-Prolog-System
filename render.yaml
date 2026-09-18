@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: prolog-multi-algorithm-navigation
+    runtime: docker
+    plan: free
+    healthCheckPath: /
