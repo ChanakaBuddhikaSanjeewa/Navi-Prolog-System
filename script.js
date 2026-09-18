@@ -5,10 +5,10 @@ function toggleTheme() {
 
     if (htmlRoot.classList.contains('dark')) {
         htmlRoot.classList.remove('dark');
-        themeIcon.className = "fa-solid fa-sun text-amber-400";
+        themeIcon.className = "fa-solid fa-moon text-cyan-400";
     } else {
         htmlRoot.classList.add('dark');
-        themeIcon.className = "fa-solid fa-moon text-cyan-400";
+        themeIcon.className = "fa-solid fa-sun text-amber-400";
     }
 }
 
@@ -236,7 +236,6 @@ async function calculateRoute() {
         return;
     }
 
-    // Auto-fetch start location coordinates if not already set or text changed
     if (!startCoord) {
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(startInputVal)}`);
@@ -250,7 +249,6 @@ async function calculateRoute() {
         }
     }
 
-    // Auto-fetch destination coordinates if not already set or text changed
     if (!destCoord) {
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(destInputVal)}`);
