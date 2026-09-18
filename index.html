@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="si" class="h-full dark" id="html-root">
+<html lang="en" class="h-full" id="html-root">
 
 <head>
     <meta charset="UTF-8">
@@ -7,22 +7,24 @@
     <title>NaviProlog System for Daily Commuters</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Separate CSS File -->
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body
-    class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden transition-colors duration-300">
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden">
 
     <!-- Top Navigation Bar -->
     <header
         class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shrink-0 shadow-lg">
         <div class="flex items-center space-x-3">
             <div
-                class="w-10 h-10 rounded-xl overflow-hidden border border-cyan-500/40 shadow-md shadow-cyan-500/20 shrink-0 bg-slate-950 flex items-center justify-center">
-                <img src="icon.jpg" alt="Smart Route Finder Logo" class="w-full h-full object-cover">
+                class="w-10 h-10 rounded-xl overflow-hidden border border-cyan-500/40 shadow-md shadow-cyan-500/20 shrink-0">
+                <img src="/assests/photo_2026-09-17_14-18-54.jpg" alt="Logo" class="w-full h-full object-cover">
             </div>
             <div>
                 <h1 class="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -30,19 +32,13 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400">Daily Commuter Navigation & Route Optimization</p>
             </div>
         </div>
-        <div class="flex items-center space-x-3">
-            <!-- Theme Toggle Button -->
+        <div class="flex items-center space-x-4">
             <button onclick="toggleTheme()"
-                class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-lg border border-slate-300 dark:border-slate-700 transition cursor-pointer"
-                title="Toggle Theme">
+                class="text-xs bg-slate-200 dark:bg-slate-800 p-2 rounded-lg cursor-pointer">
                 <i id="theme-icon" class="fa-solid fa-moon text-cyan-400"></i>
             </button>
-            <span
-                class="flex items-center text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span> Online Mode
-            </span>
             <button onclick="openRoadStatusModal()"
-                class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                class="text-xs bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-road-barrier text-amber-400"></i> Manage Road Status
             </button>
         </div>
@@ -55,9 +51,10 @@
         <aside
             class="w-full md:w-96 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex flex-col p-5 shrink-0 z-10 overflow-y-auto shadow-2xl">
 
+            <!-- Journey Inputs Section -->
             <div class="space-y-4">
                 <h2
-                    class="text-sm font-semibold tracking-wide uppercase text-cyan-600 dark:text-cyan-400 flex items-center gap-2">
+                    class="text-sm font-semibold tracking-wide uppercase text-cyan-500 dark:text-cyan-400 flex items-center gap-2">
                     <i class="fa-solid fa-route"></i> Journey Planner
                 </h2>
 
@@ -70,12 +67,12 @@
                         <input type="text" id="start-input" placeholder="Search start location..." autocomplete="off"
                             class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500 transition">
                         <button onclick="useCurrentLocation()" title="Use Current GPS Location"
-                            class="absolute right-2.5 text-slate-400 hover:text-cyan-400 p-1 cursor-pointer">
+                            class="absolute right-2.5 text-slate-500 hover:text-cyan-500 p-1 cursor-pointer">
                             <i class="fa-solid fa-crosshairs text-base"></i>
                         </button>
                     </div>
                     <div id="start-suggestions"
-                        class="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                        class="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
                     </div>
                 </div>
 
@@ -88,32 +85,11 @@
                             class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-rose-500 transition">
                     </div>
                     <div id="dest-suggestions"
-                        class="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                        class="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 hidden max-h-48 overflow-y-auto">
                     </div>
                 </div>
 
-                <!-- Live Weather Card -->
-                <div id="weather-card"
-                    class="bg-slate-100 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-xl p-3 flex items-center justify-between hidden">
-                    <div class="flex items-center gap-3">
-                        <div id="weather-icon-container"
-                            class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg">
-                            <i class="fa-solid fa-cloud-sun"></i>
-                        </div>
-                        <div>
-                            <div
-                                class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
-                                Live Weather (Start)</div>
-                            <div id="weather-condition" class="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                Checking...</div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div id="weather-temp" class="text-base font-bold text-cyan-600 dark:text-cyan-400">--°C</div>
-                    </div>
-                </div>
-
-                <!-- Preferences & Travel Modes -->
+                <!-- Preferences & Travel Mode -->
                 <div class="grid grid-cols-2 gap-3 pt-1">
                     <div>
                         <label
@@ -129,62 +105,63 @@
                             Mode</label>
                         <select id="travel-mode-select"
                             class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500">
-                            <option value="car">Car (Drive)</option>
-                            <option value="bike">Bike (Two-Wheeler)</option>
-                            <option value="train">Train (Public Transport)</option>
-                            <option value="walk">Walk</option>
+                            <option value="vehicle">Vehicle (Car/Bike)</option>
+                            <option value="foot">On Foot (Walking)</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Find Route Button -->
                 <button onclick="calculateRoute()"
-                    class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-semibold py-3 rounded-xl shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2 cursor-pointer mt-2">
+                    class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2 cursor-pointer mt-2">
                     <i class="fa-solid fa-compass"></i> Find Best Route
                 </button>
             </div>
 
-            <!-- Saved Places / Favorites Section -->
-            <div class="mt-4">
-                <h3
-                    class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-bookmark text-cyan-500"></i> Saved Places (Favorites)
-                </h3>
-                <div id="saved-places-list" class="space-y-1">
-                    <!-- Dynamically rendered frequent places -->
+            <!-- Weather Card -->
+            <div id="weather-card"
+                class="mt-4 bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 hidden flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="weather-icon-container" class="text-2xl text-amber-400"><i class="fa-solid fa-sun"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Live Weather
+                        </div>
+                        <div id="weather-condition" class="text-xs font-bold text-slate-800 dark:text-slate-200">Clear
+                            Sky</div>
+                    </div>
                 </div>
+                <div id="weather-temp" class="text-base font-extrabold text-cyan-500">--°C</div>
             </div>
 
             <!-- Journey Metrics Card -->
             <div id="metrics-card"
-                class="mt-6 bg-slate-100 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-2xl p-4 hidden">
+                class="mt-4 bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 hidden">
                 <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Route
-                        Summary</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-cyan-500">Route Summary</span>
                     <span id="badge-recommended"
-                        class="text-[10px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-medium">RECOMMENDED</span>
+                        class="text-[10px] bg-cyan-500/10 text-cyan-500 border border-cyan-500/30 px-2 py-0.5 rounded-full font-medium">RECOMMENDED</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 text-center">
                     <div
-                        class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Distance</div>
+                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-500">Distance</div>
                         <div id="metric-dist" class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">0 km
                         </div>
                     </div>
                     <div
-                        class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Duration</div>
+                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-500">Duration</div>
                         <div id="metric-time" class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">0 min
                         </div>
                     </div>
                     <div
-                        class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Stops</div>
+                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl">
+                        <div class="text-[10px] text-slate-500">Stops</div>
                         <div id="metric-stops" class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">0
                         </div>
                     </div>
                 </div>
-
                 <div class="mt-4 flex gap-2">
                     <button id="nav-btn" onclick="toggleNavigation()"
                         class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20">
@@ -198,18 +175,20 @@
                 </div>
             </div>
 
-            <!-- Alternative Corridors Section -->
-            <div class="mt-6 flex-1 flex flex-col">
-                <div class="flex items-center justify-between mb-2">
-                    <h3
-                        class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <code class="text-cyan-600 dark:text-cyan-400">Alternative Corridors</code>
-                    </h3>
+            <!-- Saved Places & Alternative Corridors -->
+            <div class="mt-4 space-y-4 flex-1">
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Saved / Frequent
+                        Places</h3>
+                    <div id="saved-places-list"></div>
                 </div>
-                <div id="alternatives-list" class="space-y-2 overflow-y-auto max-h-48 pr-1">
-                    <div
-                        class="text-xs text-slate-500 italic p-2 bg-slate-100 dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-slate-900 text-center">
-                        Calculate a route to view alternative options.
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Alternative Corridors
+                    </h3>
+                    <div id="alternatives-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        <div
+                            class="text-xs text-slate-500 italic p-2 bg-slate-100 dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-slate-900 text-center">
+                            Calculate a route to view alternative options.</div>
                     </div>
                 </div>
             </div>
@@ -231,25 +210,23 @@
                     <i class="fa-solid fa-road-barrier text-amber-400"></i> Manage Road Network Status
                 </h3>
                 <button onclick="closeRoadStatusModal()"
-                    class="text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 cursor-pointer">
+                    class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 cursor-pointer">
                     <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
             <div class="py-4 space-y-3">
-                <p class="text-xs text-slate-600 dark:text-slate-400">Inspect available road corridors or
-                    report/simulate blocked road segments with status color options:</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Inspect available road corridors or update status
+                    (Red, Orange, Yellow):</p>
                 <div id="modal-roads-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
             </div>
             <div class="flex justify-end pt-3 border-t border-slate-200 dark:border-slate-800">
                 <button onclick="closeRoadStatusModal()"
-                    class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer transition">Close</button>
+                    class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer transition">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Custom Script -->
+    <!-- Separate JavaScript File -->
     <script src="script.js"></script>
 </body>
 
