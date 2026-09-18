@@ -1,4 +1,4 @@
-:- module('NaviProlog-System', [
+- module('NaviProlog-System', [
     route_api_handler/1,
     search_api_handler/1,
     reverse_api_handler/1,
@@ -12,15 +12,7 @@
 :- use_module(library(http/http_parameters)).
 :- use_module(library(uri)).
 :- use_module(library(readutil)).
-% http_get/3 itself lives here and was never imported, so every call to
-% it below threw "Unknown procedure", was swallowed by catch/3, and
-% every search/route/reverse-geocode silently "failed" no matter what
-% was typed.
 :- use_module(library(http/http_client)).
-% Required for http_get/3 to be able to open https:// URLs at all
-% (Nominatim and OSRM are both https). Without these, every outbound
-% request below throws immediately, gets swallowed by catch/3, and
-% every search/route silently "fails" no matter what was typed.
 :- use_module(library(ssl)).
 :- use_module(library(http/http_ssl_plugin)).
 
@@ -36,11 +28,6 @@
 :- initialization(initialize_backend).
 
 initialize_backend :-
-    % make_directory/1 does not create parent directories, so on a fresh
-    % checkout (no 'backend' dir yet) 'backend/data' failed to be created,
-    % the catch/3 above silently swallowed that, and the open/3 just below
-    % then crashed with "source_sink does not exist" because the directory
-    % genuinely wasn't there.
     catch(make_directory('backend'), _, true),
     catch(make_directory('backend/data'), _, true),
     (   exists_file('backend/data/blocked_roads.pl')
@@ -104,7 +91,15 @@ parse_osrm_response(JSON, Dict, Response) :-
     get_dict(geometry, BestRoute, Geometry),
     get_dict(coordinates, Geometry, Coords),
     DistKm is round((DistMeters / 1000.0) * 10) / 10.0,
-    Minutes is ceiling(DurSeconds / 60.0),
+    
+    % Travel mode එක පදනම් කරගෙන Duration එක නිවැරදිව ගණනය කිරීම
+    (   get_dict(travel_mode, Dict, 'walk')
+    ->  Minutes is ceiling((DistKm / 4.0) * 60)
+    ;   get_dict(travel_mode, Dict, 'bike')
+    ->  Minutes is ceiling((DistKm / 20.0) * 60)
+    ;   Minutes is ceiling(DurSeconds / 60.0)
+    ),
+    
     maplist(coord_to_dict, Coords, FormattedCoords),
     get_dict(destination, Dict, DestName),
     Response = json{

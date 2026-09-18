@@ -33,7 +33,7 @@ function initMap() {
 
 window.addEventListener('DOMContentLoaded', () => {
     initMap();
-    renderSavedPlaces(); // Load and display saved favorite destinations
+    renderSavedPlaces();
     setupAutocomplete('start-input', 'start-suggestions', (item) => {
         startCoord = { lat: parseFloat(item.lat), lon: parseFloat(item.lon), name: item.display_name };
         document.getElementById('start-input').value = item.display_name;
@@ -48,7 +48,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Automatic Saved Places / Favorites Management
 function trackFrequentDestination(name, lat, lon) {
     let savedPlaces = JSON.parse(localStorage.getItem('nav_saved_places') || '[]');
     let existing = savedPlaces.find(p => p.name === name);
@@ -92,7 +91,6 @@ function selectSavedPlace(lat, lon, name) {
     trackFrequentDestination(name, lat, lon);
 }
 
-// Fetch Live Weather using Open-Meteo API
 async function fetchWeather(lat, lon) {
     const weatherCard = document.getElementById('weather-card');
     const tempElement = document.getElementById('weather-temp');
@@ -197,8 +195,6 @@ function useCurrentLocation() {
         alert('Geolocation is not supported by your browser');
         return;
     }
-    // getCurrentPosition silently hangs forever on insecure origins / when the
-    // browser blocks the call outright, so check this first and fail fast.
     if (!window.isSecureContext) {
         alert('Location access needs a secure connection (HTTPS or localhost). Please open this site over HTTPS.');
         return;
@@ -220,10 +216,6 @@ function useCurrentLocation() {
             updateMapMarker('start', lat, lon, 'Current Location');
         }
     }, (err) => {
-        // The original code passed no options and only ever showed one generic
-        // alert, so a timeout, a permission block, and GPS-unavailable all
-        // looked identical and getCurrentPosition could hang indefinitely
-        // (default timeout is Infinity) with no feedback at all.
         let msg = 'Unable to retrieve your location.';
         if (err.code === err.PERMISSION_DENIED) {
             msg = 'Location permission was denied. Allow location access for this site in your browser settings and try again.';
@@ -447,7 +439,7 @@ async function openRoadStatusModal() {
                 <div class="flex gap-1">
                     <button onclick="setRoadStatusColor('${road.name}', 'Red')" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer" title="Mark Red">Red</button>
                     <button onclick="setRoadStatusColor('${road.name}', 'Orange')" class="bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer" title="Mark Orange">Orange</button>
-                    <button onclick="setRoadStatusColor('${road.name}', 'Yellow')" class="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer" title="Mark Yellow">Yellow</button>
+                    <button onclick="setRoadStatusColor('${road.name}', 'Yellow')" class="bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded-lg text-[10px] font-medium cursor-pointer" title="Mark Yellow">Yellow</button>
                 </div>
             `;
             list.appendChild(div);
