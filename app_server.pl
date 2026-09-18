@@ -13,7 +13,7 @@
 :- http_handler(root(.), frontend_files, [prefix]).
 :- http_handler(root(assests), http_reply_from_files('assests', []), [prefix]).
 
-% Railway healthcheck එකට JSON response එකක් යැවීම
+% Railway healthcheck එකට පමණක් JSON response එක යැවීම
 handle_healthcheck(_Request) :-
     format('Content-type: application/json~n~n'),
     json_write(current_output, json([status=ok, message="Prolog Smart Route Server is running!"])).
