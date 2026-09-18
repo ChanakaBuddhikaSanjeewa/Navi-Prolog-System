@@ -228,11 +228,18 @@ function handleTravelModeChange() {
 }
 
 async function calculateRoute() {
-    // Auto-fetch start location if typed manually without dropdown selection
-    if (!startCoord && document.getElementById('start-input').value.trim() !== '') {
-        const query = document.getElementById('start-input').value.trim();
+    const startInputVal = document.getElementById('start-input').value.trim();
+    const destInputVal = document.getElementById('dest-input').value.trim();
+
+    if (!startInputVal || !destInputVal) {
+        alert('Please enter both start location and destination.');
+        return;
+    }
+
+    // Auto-fetch start location coordinates if not already set or text changed
+    if (!startCoord) {
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const res = await fetch(`/api/search?q=${encodeURIComponent(startInputVal)}`);
             const data = await res.json();
             if (data && data.length > 0) {
                 startCoord = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), name: data[0].display_name };
@@ -243,15 +250,15 @@ async function calculateRoute() {
         }
     }
 
-    // Auto-fetch destination if typed manually without dropdown selection
-    if (!destCoord && document.getElementById('dest-input').value.trim() !== '') {
-        const query = document.getElementById('dest-input').value.trim();
+    // Auto-fetch destination coordinates if not already set or text changed
+    if (!destCoord) {
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const res = await fetch(`/api/search?q=${encodeURIComponent(destInputVal)}`);
             const data = await res.json();
             if (data && data.length > 0) {
                 destCoord = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), name: data[0].display_name };
                 updateMapMarker('dest', destCoord.lat, destCoord.lon, data[0].display_name);
+                trackFrequentDestination(data[0].display_name, destCoord.lat, destCoord.lon);
             }
         } catch (e) {
             console.error("Auto-fetch destination failed", e);
@@ -259,7 +266,7 @@ async function calculateRoute() {
     }
 
     if (!startCoord || !destCoord) {
-        alert('Please select both start location and destination.');
+        alert('Could not resolve coordinates for the entered locations. Please try selecting from the suggestions list.');
         return;
     }
 
