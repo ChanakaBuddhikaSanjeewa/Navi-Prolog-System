@@ -8,20 +8,15 @@
 
 :- dynamic server_started/0.
 
-% Railway healthcheck සහ මුල් පිටුව සඳහා වෙනම handlers දෙකක්
-:- http_handler(root(.), handle_root, [prefix]).
+% Railway healthcheck එක සඳහා වෙනම /health path එකක්
+:- http_handler(root(health), handle_healthcheck, []).
+:- http_handler(root(.), frontend_files, [prefix]).
 :- http_handler(root(assests), http_reply_from_files('assests', []), [prefix]).
 
-% Root path එකට එන ඉල්ලීම් පාලනය කිරීම
-handle_root(Request) :-
-    memberchk(path(Path), Request),
-    (   Path = '/'
-    ->  % Railway healthcheck එකට හෝ මුල් පිටුවට JSON response එකක් යැවීම
-        format('Content-type: application/json~n~n'),
-        json_write(current_output, json([status=ok, message="Prolog Smart Route Server is running!"]))
-    ;   % අනෙකුත් frontend files සඳහා
-        frontend_files(Request)
-    ).
+% Railway healthcheck එකට JSON response එකක් යැවීම
+handle_healthcheck(_Request) :-
+    format('Content-type: application/json~n~n'),
+    json_write(current_output, json([status=ok, message="Prolog Smart Route Server is running!"])).
 
 start :-
     ensure_server,
