@@ -12,6 +12,11 @@
 :- use_module(library(http/http_parameters)).
 :- use_module(library(uri)).
 :- use_module(library(readutil)).
+% http_get/3 itself lives here and was never imported, so every call to
+% it below threw "Unknown procedure", was swallowed by catch/3, and
+% every search/route/reverse-geocode silently "failed" no matter what
+% was typed.
+:- use_module(library(http/http_client)).
 % Required for http_get/3 to be able to open https:// URLs at all
 % (Nominatim and OSRM are both https). Without these, every outbound
 % request below throws immediately, gets swallowed by catch/3, and
@@ -31,6 +36,12 @@
 :- initialization(initialize_backend).
 
 initialize_backend :-
+    % make_directory/1 does not create parent directories, so on a fresh
+    % checkout (no 'backend' dir yet) 'backend/data' failed to be created,
+    % the catch/3 above silently swallowed that, and the open/3 just below
+    % then crashed with "source_sink does not exist" because the directory
+    % genuinely wasn't there.
+    catch(make_directory('backend'), _, true),
     catch(make_directory('backend/data'), _, true),
     (   exists_file('backend/data/blocked_roads.pl')
     ->  consult('backend/data/blocked_roads.pl')
