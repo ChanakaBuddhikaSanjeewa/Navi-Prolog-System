@@ -197,6 +197,12 @@ function useCurrentLocation() {
         alert('Geolocation is not supported by your browser');
         return;
     }
+    // getCurrentPosition silently hangs forever on insecure origins / when the
+    // browser blocks the call outright, so check this first and fail fast.
+    if (!window.isSecureContext) {
+        alert('Location access needs a secure connection (HTTPS or localhost). Please open this site over HTTPS.');
+        return;
+    }
     navigator.geolocation.getCurrentPosition(async (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
@@ -213,9 +219,21 @@ function useCurrentLocation() {
             document.getElementById('start-input').value = 'Current Location';
             updateMapMarker('start', lat, lon, 'Current Location');
         }
-    }, () => {
-        alert('Unable to retrieve your location');
-    });
+    }, (err) => {
+        // The original code passed no options and only ever showed one generic
+        // alert, so a timeout, a permission block, and GPS-unavailable all
+        // looked identical and getCurrentPosition could hang indefinitely
+        // (default timeout is Infinity) with no feedback at all.
+        let msg = 'Unable to retrieve your location.';
+        if (err.code === err.PERMISSION_DENIED) {
+            msg = 'Location permission was denied. Allow location access for this site in your browser settings and try again.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+            msg = 'Your position is currently unavailable. Check that GPS/location services are turned on.';
+        } else if (err.code === err.TIMEOUT) {
+            msg = 'Location request timed out. Please try again.';
+        }
+        alert(msg);
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
 function handleTravelModeChange() {
