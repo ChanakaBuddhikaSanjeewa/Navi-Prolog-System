@@ -218,6 +218,17 @@ function useCurrentLocation() {
     });
 }
 
+// Handle Travel Mode Changes dynamically if needed
+function handleTravelModeChange() {
+    const travelMode = document.getElementById('travel-mode-select').value;
+    console.log("Selected Travel Mode changed to:", travelMode);
+
+    // Agar route pehle se calculated hai toh mode change hone par dobara calculate kar sakte hain
+    if (startCoord && destCoord) {
+        calculateRoute();
+    }
+}
+
 async function calculateRoute() {
     if (!startCoord || !destCoord) {
         alert('Please select both start location and destination.');
